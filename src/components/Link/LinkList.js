@@ -1,7 +1,9 @@
 import React from "react";
 import FirebaseContext from "../../firebase/context";
+import LinkItem from "./LinkItem";
 function LinkList(props) {
   const { firebase } = React.useContext(FirebaseContext);
+  const [links, setLinks] = React.useSate([]);
 
   React.useEffect(() => {
     getLinks();
@@ -14,10 +16,21 @@ function LinkList(props) {
     const links = snapshot.docs.map(doc => {
       return { id: doc.id, ...doc.data() };
     });
-    console.log({ links });
+    setLinks(links);
   }
 
-  return <div>LinkList</div>;
+  return (
+    <div>
+      {links.map((link, index) => (
+        <LinkItem
+          key={link.id}
+          showCount={true}
+          link={link}
+          index={index + 1}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default LinkList;
