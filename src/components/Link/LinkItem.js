@@ -1,74 +1,70 @@
 import React from "react";
-import { Link, withRouter } from "react-router-dom";
-import { getDomain } from "../../utils";
-import distanceInWordsToNow from "date-fns/distance_in_words_to_now";
+import useFormValidation from "../Auth/useFormValidation";
+import validateCreateLink from "../Auth/validateCreateLink";
 import FirebaseContext from "../../firebase/context";
-function LinkItem({ link, index, showCount, history }) {
+
+const INITIAL_STATE = {
+  description: "",
+  url: ""
+};
+
+function CreateLink(props) {
   const { firebase, user } = React.useContext(FirebaseContext);
-  function handleVote() {
+  const { handleSubmit, handleChange, values, errors } = useFormValidation(
+    INITIAL_STATE,
+    validateCreateLink,
+    handleCreateLink
+  );
+
+  function handleCreateLink() {
     if (!user) {
-      history.push("/login");
+      props.history.push("/login");
     } else {
-      const voteRef = firebase.db.collection("links").doc(link.id);
-      voteRef.get().then(doc => {
-        if (doc.exists) {
-          const previousVotes = doc.data().votes;
-          const vote = { votedBy: { id: user.uid, name: user.displayName } };
-          const updatedVotes = [...previousVotes, vote];
-          const voteCount = updatedVotes.length;
-          voteRef.update({ votes: updatedVotes, voteCount });
-        }
-      });
+      const { url, description } = values;
+      const newLink = {
+        url,
+        description,
+        postedBy: {
+          id: user.uid,
+          name: user.displayName
+        },
+        voteCount: 0,
+        votes: [],
+        comments: [],
+        created: Date.now()
+      };
+      firebase.db.collection("links").add(newLink);
+      props.history.push("/");
     }
   }
-  function handleDeleteLink() {
-    const linkRef = firebase.db.collection("links").doc(link.id);
-    linkRef
-      .delete()
-      .then(() => {
-        console.log(`Document with ID ${link.id} deleted`);
-      })
-      .catch(err => {
-        console.error("Error deleting document", err);
-      });
-  }
-  const postedByAuthUser = user && user.uid === link.postedBy.id;
+
   return (
-    <div className="flex items-start mt2">
-      <div className="flex items-center">
-        {showCount && <span className="gray">{index}.</span>}
-        <div className="vote-button" onClick={handleVote}>
-          ▲
-        </div>
-      </div>
-      <div className="ml1">
-        <div>
-          <a href={link.url} className="black no-underline">
-            {link.description}
-          </a>{" "}
-          <span className="link">({getDomain(link.url)})</span>
-        </div>
-        <div className="f6 1h-copy gray">
-          {link.voteCount} votes by {link.postedBy.name}{" "}
-          {distanceInWordsToNow(link.created)}
-          {" | "}
-          <Link to={`/link/${link.id}`}>
-            {link.comments.length > 0
-              ? `${link.comments.length} comments`
-              : "discuss"}
-          </Link>
-          {postedByAuthUser && (
-            <>
-              {" | "}
-              <span className="delete-button" onClick={handleDeleteLink}>
-                delete
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+    <form onSubmit={handleSubmit} className="flex flex-column mt3">
+      <input
+        onChange={handleChange}
+        value={values.description}
+        name="description"
+        placeholder="A description for your link"
+        autoComplete="off"
+        type="text"
+        className={errors.description && "error-input"}
+      />
+      {errors.description && <p className="error-text">{errors.description}</p>}
+      <input
+        onChange={handleChange}
+        value={values.url}
+        name="url"
+        placeholder="The URL for the link"
+        autoComplete="off"
+        type="url"
+        className={errors.url && "error-input"}
+      />
+      {errors.url && <p className="error-text">{errors.url}</p>}
+      <button className="button" type="submit">
+        Submit
+      </button>
+    </form>
   );
 }
 
-export default withRouter(LinkItem);
+export default CreateLink;

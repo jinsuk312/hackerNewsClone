@@ -2,6 +2,7 @@ import React from "react";
 import FirebaseContext from "../../firebase/context";
 import LinkItem from "./LinkItem";
 import { LINKS_PER_PAGE } from "../../utils/index";
+import axios from "axios";
 
 function LinkList(props) {
   const { firebase } = React.useContext(FirebaseContext);
@@ -37,6 +38,19 @@ function LinkList(props) {
         .startAfter(cursor.created)
         .limit(LINKS_PER_PAGE)
         .onSnapshot(handleSnapshot);
+    } else {
+      const offset = page * LINKS_PER_PAGE - LINKS_PER_PAGE;
+      axios
+        .get(
+          `https://us-central1-hooks-news-c2747.cloudfunctions.net/linksPagination?offset=${offset}`
+        )
+        .then(response => {
+          const links = response.data;
+          const lastLink = links[links.length - 1];
+          setLinks(links);
+          setCursor(lastLink);
+        });
+      return () => {};
     }
   }
 

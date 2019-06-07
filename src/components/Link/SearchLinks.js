@@ -5,8 +5,9 @@ import FirebaseContext from "../../firebase/context";
 function SearchLinks() {
   const { firebase } = React.useContext(FirebaseContext);
   const [filteredLinks, setFilteredLinks] = React.useState([]);
-  const [filter, setFilter] = React.useState("");
   const [links, setLinks] = React.useState([]);
+  const [filter, setFilter] = React.useState("");
+
   React.useEffect(() => {
     getInitialLinks();
   }, []);
@@ -22,6 +23,7 @@ function SearchLinks() {
         setLinks(links);
       });
   }
+
   function handleSearch(event) {
     event.preventDefault();
     const query = filter.toLowerCase();
@@ -34,6 +36,7 @@ function SearchLinks() {
     });
     setFilteredLinks(matchedLinks);
   }
+
   return (
     <div>
       <form onSubmit={handleSearch}>
