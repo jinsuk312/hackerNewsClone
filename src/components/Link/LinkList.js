@@ -3,7 +3,7 @@ import FirebaseContext from "../../firebase/context";
 import LinkItem from "./LinkItem";
 function LinkList(props) {
   const { firebase } = React.useContext(FirebaseContext);
-  const [links, setLinks] = React.useSate([]);
+  const [links, setLinks] = React.useState([]);
 
   React.useEffect(() => {
     getLinks();
